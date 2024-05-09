@@ -1,0 +1,17 @@
+FROM python:3.11-bookworm
+
+RUN apt update && apt install -y firefox-esr
+RUN python3 -m venv /comwatt_hue_monitor
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz -O /tmp/geckodriver.tar.gz && \
+    tar xzf /tmp/geckodriver.tar.gz -C /comwatt_hue_monitor/bin
+
+RUN /comwatt_hue_monitor/bin/python3 -m pip install --upgrade pip
+RUN /comwatt_hue_monitor/bin/python3 -m pip install comwatt requests rgbxy csscolors hue-color-converter pythonhuecontrol python-dateutil suntime
+
+VOLUME /mnt
+WORKDIR /mnt
+
+COPY monitor.py /comwatt_hue_monitor/bin/
+RUN chmod +x /comwatt_hue_monitor/bin/monitor.py
+
+CMD ["/comwatt_hue_monitor/bin/python3", "/comwatt_hue_monitor/bin/monitor.py", "/mnt/monitor.json" ]
