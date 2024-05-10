@@ -18,7 +18,7 @@ import suntime
 
 class Monitor(object):
 
-    def __init__(self, comwatt_email=None, comwatt_password=None, hue_bridge=None, hue_key=None, hue_light=None):
+    def __init__(self, comwatt_email=None, comwatt_password=None, hue_bridge=None, hue_key=None, hue_light=None, headless=True):
 
         self.comwatt_email = comwatt_email
         self.comwatt_password = comwatt_password
@@ -26,8 +26,11 @@ class Monitor(object):
         self.hue_bridge = hue_bridge
         self.hue_key = hue_key
         self.hue_light = hue_light
+        self.headless = headless
 
         self.do_run = False
+        self.bridge = None
+        self.comwatt = None
 
         self.logger = logging.getLogger("Monitor")
 
@@ -48,11 +51,6 @@ class Monitor(object):
     def initialize(self):
 
         self.bridge = pythonhuecontrol.v1.bridge.Bridge(self.hue_bridge, "http://" + self.hue_bridge + "/api/" + self.hue_key)
-
-        # self.comwatt = comwatt.PowerGEN4(args.debug)
-        # self.comwatt.login(self.comwatt_email, self.comwatt_password)
-
-        self.comwatt = comwatt.PowerGEN4(self.comwatt_email, self.comwatt_password, args.debug)
 
         self.light_monitor = None
 
@@ -148,7 +146,12 @@ class Monitor(object):
 
             if time_now < self.sunrise or time_now > self.sunset:
                 self.logger.warn("Sun is not raised")
+                self.comwatt = None
                 continue
+
+            if not self.comwatt:
+                self.logger.debug("Connect to Comwatt")
+                self.comwatt = comwatt.PowerGEN4(self.comwatt_email, self.comwatt_password, self.headless)
 
             try:
                 #self.comwatt.devices()
@@ -210,10 +213,6 @@ class Monitor(object):
                 if count >= args.count:
                     break
 
-    def __del__(self):
-         
-        self.comwatt.quit()
-
 
 if __name__ == "__main__":
 
@@ -221,14 +220,24 @@ if __name__ == "__main__":
     parser.add_argument("config")
     parser.add_argument("--delay", type=int, default=5)
     parser.add_argument("--count", type=int, default=0)
-    parser.add_argument("--debug", action="store_true")
-    parser.add_argument("--log")
+    parser.add_argument("--show-browser", action="store_true")
+    parser.add_argument("--log-file")
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING"])
     args = parser.parse_args()
     
-    log_level = logging.INFO
+    if not args.log_level:
+        log_level = logging.ERROR
+    if args.log_level == "DEBUG":
+        log_level = logging.DEBUG
+    else:
+        if args.log_level == "INFO":
+            log_level = logging.INFO
+        else:
+            if args.log_level == "WARNING":
+                log_level = logging.WARN
 
-    if args.log:
-        log_handler = logging.handlers.RotatingFileHandler(filename=args.log, mode="a", maxBytes=1024 * 1024, backupCount=5)
+    if args.log_file:
+        log_handler = logging.handlers.RotatingFileHandler(filename=args.log_file, mode="a", maxBytes=1024 * 1024, backupCount=5)
         logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=log_level, handlers=[log_handler])
     else:
         logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=log_level)
@@ -238,7 +247,7 @@ if __name__ == "__main__":
     config = json.load(fd)
     fd.close()
 
-    m = Monitor()
+    m = Monitor(headless=not args.show_browser)
     m.load(config)
     m.initialize()
     m.run()
