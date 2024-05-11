@@ -11,8 +11,10 @@ RUN /comwatt_hue_monitor/bin/python3 -m pip install requests rgbxy csscolors hue
 VOLUME /mnt
 WORKDIR /mnt
 
-RUN /comwatt_hue_monitor/bin/python3 -m pip install comwatt==0.7.0
+RUN /comwatt_hue_monitor/bin/python3 -m pip install comwatt==0.8.0
 COPY monitor.py /comwatt_hue_monitor/bin/
 RUN chmod +x /comwatt_hue_monitor/bin/monitor.py
 
-CMD ["/comwatt_hue_monitor/bin/python3", "/comwatt_hue_monitor/bin/monitor.py", "/mnt/monitor.json" ]
+ENV LOG_LEVEL="ERROR"
+
+CMD /comwatt_hue_monitor/bin/python3 /comwatt_hue_monitor/bin/monitor.py --log-level $LOG_LEVEL /mnt/monitor.json

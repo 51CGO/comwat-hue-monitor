@@ -222,7 +222,7 @@ if __name__ == "__main__":
     parser.add_argument("--count", type=int, default=0)
     parser.add_argument("--show-browser", action="store_true")
     parser.add_argument("--log-file")
-    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING"])
+    parser.add_argument("--log-level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
     args = parser.parse_args()
     
     if not args.log_level:
