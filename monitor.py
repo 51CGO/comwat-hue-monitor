@@ -165,19 +165,8 @@ class Monitor(object):
                 self.logger.debug("Connect to Comwatt")
                 self.comwatt = comwatt.PowerGEN4(self.comwatt_email, self.comwatt_password, self.headless)
 
-            try:
-                #self.comwatt.devices()
-
-                list_injection = self.comwatt.get_devices("injection")
-                device_injection = list_injection[0]
-                list_withdrawal = self.comwatt.get_devices("withdrawal")
-                device_withdrawal = list_withdrawal[0] 
-                list_sun = self.comwatt.get_devices("sun")
-                device_sun = list_sun[0] 
-            except:
-                # Sometimes connection to Comwatt is lost so we need to reset connection
-                self.initialize()
-                continue
+            list_sun = self.comwatt.get_devices("sun")
+            device_sun = list_sun[0]
 
             if not device_sun.initialized:
                 self.logger.warning("Sun: Not initialized (count=%d)" % self.same_state_count)
@@ -193,6 +182,11 @@ class Monitor(object):
                 self.light_monitor.switch_off()
 
             else:
+
+                list_injection = self.comwatt.get_devices("injection")
+                device_injection = list_injection[0]
+                list_withdrawal = self.comwatt.get_devices("withdrawal")
+                device_withdrawal = list_withdrawal[0] 
 
                 delta = device_injection.value_instant - device_withdrawal.value_instant
 

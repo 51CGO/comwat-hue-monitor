@@ -11,7 +11,7 @@ RUN /comwatt_hue_monitor/bin/python3 -m pip install requests rgbxy csscolors hue
 VOLUME /mnt
 WORKDIR /mnt
 
-RUN /comwatt_hue_monitor/bin/python3 -m pip install comwatt==0.9.0
+RUN /comwatt_hue_monitor/bin/python3 -m pip install comwatt==0.10.0
 COPY monitor.py /comwatt_hue_monitor/bin/
 RUN chmod +x /comwatt_hue_monitor/bin/monitor.py
 
