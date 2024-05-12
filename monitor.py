@@ -18,42 +18,55 @@ import suntime
 
 class Monitor(object):
 
-    def __init__(self, comwatt_email=None, comwatt_password=None, hue_bridge=None, hue_key=None, hue_light=None, headless=True):
+    def __init__(
+            self, 
+            comwatt_email=None, comwatt_password=None, 
+            hue_bridge=None, hue_key=None, hue_light=None,
+            headless=True):
 
+        # Comwatt credentials
         self.comwatt_email = comwatt_email
         self.comwatt_password = comwatt_password
 
+        # Philips Hue
         self.hue_bridge = hue_bridge
         self.hue_key = hue_key
         self.hue_light = hue_light
-        self.headless = headless
 
-        self.do_run = False
-        self.bridge = None
-        self.comwatt = None
-
-        self.logger = logging.getLogger("Monitor")
-
-        self.previous_state = -1000000000
-        self.same_state_count = 0
-
-        self.threshold_sun = -1000000000
-        self.thresholds = []
-
+        # Location
         self.latitude = 0
         self.longitude = 0
 
+        # Sun threshold
+        self.threshold_sun = -1000000000
+
+        # Browser options
+        self.headless = headless
+
+        # Thresolds and colors configuration
+        self.thresholds = []
+
+        # Internal objects
+        self.bridge = None
+        self.comwatt = None
         self.sun_tool = None
+        self.light_monitor = None
+
+        self.logger = logging.getLogger("Monitor")
+        
+        self.previous_state = -1000000000
+        self.same_state_count = 0
+        
         self.day = None
         self.sunrise = None
         self.sunset = None
 
     def initialize(self):
 
+        # Initialize bridge connection
         self.bridge = pythonhuecontrol.v1.bridge.Bridge(self.hue_bridge, "http://" + self.hue_bridge + "/api/" + self.hue_key)
 
-        self.light_monitor = None
-
+        # Find the specified light
         for light_id in self.bridge.light_ids:
             light = self.bridge.light(light_id)
 
@@ -63,11 +76,10 @@ class Monitor(object):
 
         assert self.light_monitor is not None
 
+        # Ready to go !
         self.do_run = True
 
-        self.logger.debug("Initialized")
-
-    def load(self, config):
+    def load_configuration(self, config):
 
         self.comwatt_email = config["comwatt"]["email"]
         self.comwatt_password = config["comwatt"]["password"]
@@ -177,6 +189,7 @@ class Monitor(object):
 
             if device_sun.value_instant < self.threshold_sun : 
                 # Sun is not sufficient -> Off
+                #TODO : Optimiser les appels API (mémoriser létat de la lampe)
                 self.light_monitor.switch_off()
 
             else:
@@ -203,6 +216,7 @@ class Monitor(object):
                             break
                         i += 1
 
+                    #TODO : Optimiser les appels API (mémoriser létat de la lampe)
                     self.light_monitor.switch_on()
                     self.light_monitor.state.set(xy=color)  
 
@@ -248,6 +262,6 @@ if __name__ == "__main__":
     fd.close()
 
     m = Monitor(headless=not args.show_browser)
-    m.load(config)
+    m.load_configuration(config)
     m.initialize()
     m.run()
