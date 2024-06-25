@@ -1,4 +1,4 @@
-FROM python:3.11-bookworm
+FROM python:3.11-slim-bookworm
 
 RUN apt update && apt install -y firefox-esr
 RUN python3 -m venv /comwatt_hue_monitor
